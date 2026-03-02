@@ -58,6 +58,40 @@ services:
       - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.meshlogiq.local`)"
       - "traefik.http.routers.pgadmin.entrypoints=websecure"
       - "traefik.http.routers.pgadmin.tls=true"
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: meshlogiq-minio
+    env_file:
+      - ./env_files/minio.env
+    command: >
+      minio server
+      --ftp="address=${MINIO_FTP_ADDRESS:-:8021}"
+      --ftp="passive-port-range=${MINIO_FTP_PASSIVE_RANGE:-32000-32100}"
+      /data
+    volumes:
+      - ./minio_data:/data
+    networks:
+      - meshlogiq-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=meshlogiq-env_meshlogiq_network"
+      # ----- Console (UI) -> https://minio.meshlogiq.local  => container:9001
+      - "traefik.http.routers.minio-console.rule=Host(`minio.meshlogiq.local`)"
+      - "traefik.http.routers.minio-console.entrypoints=websecure"
+      - "traefik.http.routers.minio-console.tls=true"
+      - "traefik.http.routers.minio-console.service=minio-console"
+      - "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+      # ----- S3 API (path/virtual-host agnostic) -> https://s3.meshlogiq.local => container:9000
+      - "traefik.http.routers.minio-s3.rule=Host(`s3.meshlogiq.local`)"
+      - "traefik.http.routers.minio-s3.entrypoints=websecure"
+      - "traefik.http.routers.minio-s3.tls=true"
+      - "traefik.http.routers.minio-s3.service=minio-s3"
+      - "traefik.http.services.minio-s3.loadbalancer.server.port=9000"
+      # ----- S3 API with bucket subdomain -> https://{bucket}.s3.meshlogiq.local => container:9000
+      - "traefik.http.routers.minio-s3-buckets.rule=HostRegexp(`{bucket:.+}.s3.meshlogiq.local`)"
+      - "traefik.http.routers.minio-s3-buckets.entrypoints=websecure"
+      - "traefik.http.routers.minio-s3-buckets.tls=true"
+      - "traefik.http.routers.minio-s3-buckets.service=minio-s3"
 
 volumes:
   meshlogiq_pgdata:
