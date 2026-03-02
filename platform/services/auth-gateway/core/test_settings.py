@@ -20,7 +20,11 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
-# Suppress whitenoise manifest errors that occur without collectstatic
+# Remove whitenoise middleware — static files not needed in tests and it warns
+# about the staticfiles directory not existing.
+MIDDLEWARE = [m for m in MIDDLEWARE if "whitenoise" not in m]  # noqa: F405
+
+# Plain static files storage — no collectstatic needed for tests
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
