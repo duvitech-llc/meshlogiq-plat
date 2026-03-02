@@ -170,7 +170,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=meshlogiq-net"
-      - "traefik.http.routers.auth-gateway.rule=Host(`auth-gateway.meshlogiq.local`) || PathPrefix(`/api/auth`)"
+      - "traefik.http.routers.auth-gateway.rule=Host(`auth.meshlogiq.local`) || PathPrefix(`/api/auth`)"
       - "traefik.http.routers.auth-gateway.entrypoints=websecure"
       - "traefik.http.routers.auth-gateway.tls=true"
       - "traefik.http.services.auth-gateway.loadbalancer.server.port=8000"

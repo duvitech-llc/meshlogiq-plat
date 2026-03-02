@@ -1,0 +1,15 @@
+# Test dependencies for MeshLogIQ auth-gateway
+#
+# Install alongside the service requirements:
+#   pip install -r platform/services/auth-gateway/requirements.txt
+#   pip install -r tests/requirements-test.txt
+
+# Testing framework
+pytest>=8.0,<9.0
+pytest-django>=4.8,<5.0
+
+# Mocking / patching
+pytest-mock>=3.12,<4.0
+
+# Crypto — already in service requirements (cryptography>=41), listed here for clarity
+cryptography>=41.0,<43.0

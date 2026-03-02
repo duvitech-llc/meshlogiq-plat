@@ -241,13 +241,18 @@ class VerifyTokenView(views.APIView):
             jwks_client = PyJWKClient(settings.KEYCLOAK_JWKS_URL)
             signing_key = jwks_client.get_signing_key_from_jwt(token)
             
-            # Decode and verify token
+            # Decode and verify token — enforce issuer so tokens from a
+            # different realm / authority are rejected.
             payload = jwt.decode(
                 token,
                 signing_key.key,
                 algorithms=['RS256'],
                 audience=settings.KEYCLOAK_CLIENT_ID,
-                options={"verify_exp": True}
+                issuer=settings.KEYCLOAK_ISSUER,
+                options={
+                    "verify_exp": True,
+                    "require": ["exp", "iat", "iss", "aud", "sub"],
+                },
             )
             
             return Response({

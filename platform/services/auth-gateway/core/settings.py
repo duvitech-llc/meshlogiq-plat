@@ -27,7 +27,7 @@ ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '127.0.0.
 # Trusted origins for CSRF (required when behind Traefik HTTPS proxy)
 CSRF_TRUSTED_ORIGINS = env.list(
     'CSRF_TRUSTED_ORIGINS',
-    default=['https://auth-gateway.meshlogiq.local', 'https://meshlogiq.local']
+    default=['https://auth.meshlogiq.local', 'https://meshlogiq.local']
 )
 
 # Traefik / reverse-proxy support
@@ -154,6 +154,9 @@ KEYCLOAK_ADMIN_TOKEN = env('KEYCLOAK_ADMIN_TOKEN', default='')
 
 # Keycloak JWKS URL (for token verification)
 KEYCLOAK_JWKS_URL = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/certs"
+
+# Keycloak token issuer — validated on every JWT (prevents cross-realm token acceptance)
+KEYCLOAK_ISSUER = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}"
 
 # FastAPI settings
 FASTAPI_HOST = env('FASTAPI_HOST', default='0.0.0.0')

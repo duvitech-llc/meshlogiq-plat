@@ -37,6 +37,7 @@ class KeycloakJWTAuthMiddleware(MiddlewareMixin):
             '/api/auth/login/',
             '/api/auth/register/',
             '/api/auth/jwks/',
+            '/api/auth/verify/',  # token validation endpoint — carries its own token in the body
         ]
         if any(request.path.startswith(path) for path in public_paths):
             return None
@@ -56,13 +57,18 @@ class KeycloakJWTAuthMiddleware(MiddlewareMixin):
             # Get signing key from JWKS
             signing_key = self.jwks_client.get_signing_key_from_jwt(token)
             
-            # Decode and verify token
+            # Decode and verify token — enforce issuer so tokens from a
+            # different realm / authority are rejected.
             payload = jwt.decode(
                 token,
                 signing_key.key,
                 algorithms=['RS256'],
                 audience=settings.KEYCLOAK_CLIENT_ID,
-                options={"verify_exp": True}
+                issuer=settings.KEYCLOAK_ISSUER,
+                options={
+                    "verify_exp": True,
+                    "require": ["exp", "iat", "iss", "aud", "sub"],
+                },
             )
             
             # Add token payload to request for use in views
