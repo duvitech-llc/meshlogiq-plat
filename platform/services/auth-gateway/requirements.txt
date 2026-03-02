@@ -1,0 +1,33 @@
+# Django Core
+Django>=4.2,<5.0
+djangorestframework>=3.14,<4.0
+django-cors-headers>=4.3,<5.0
+django-environ>=0.11,<1.0
+
+# FastAPI for high-throughput endpoints
+fastapi>=0.104,<1.0
+uvicorn[standard]>=0.24,<1.0
+python-multipart>=0.0.6,<1.0
+
+# Keycloak Integration
+python-keycloak>=3.5,<4.0
+PyJWT>=2.8,<3.0
+cryptography>=41.0,<42.0
+
+# Database
+psycopg2-binary>=2.9,<3.0
+
+# Redis
+redis>=5.0,<6.0
+
+# Utilities
+python-dotenv>=1.0,<2.0
+pydantic>=2.5,<3.0
+httpx>=0.25,<1.0
+
+# AWS SDK for MinIO/S3
+boto3>=1.28,<2.0
+minio>=7.2,<8.0
+
+# Async support
+anyio>=4.0,<5.0

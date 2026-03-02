@@ -152,6 +152,29 @@ services:
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
+  auth-gateway:
+    container_name: meshlogiq-auth-gateway
+    build:
+      context: ../platform/services/auth-gateway
+      dockerfile: Dockerfile
+    env_file:
+      - ./env_files/auth-gateway.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - meshlogiq-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=meshlogiq-net"
+      - "traefik.http.routers.auth-gateway.rule=Host(`auth-gateway.meshlogiq.local`) || PathPrefix(`/api/auth`)"
+      - "traefik.http.routers.auth-gateway.entrypoints=websecure"
+      - "traefik.http.routers.auth-gateway.tls=true"
+      - "traefik.http.services.auth-gateway.loadbalancer.server.port=8000"
+      - "traefik.http.services.auth-gateway.loadbalancer.passhostheader=true"
     
 volumes:
   meshlogiq_pg_data:

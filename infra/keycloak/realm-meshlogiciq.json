@@ -32,11 +32,11 @@
       "publicClient": true,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
       "attributes": { "pkce.code.challenge.method": "S256" },
-      "redirectUris": [ "http://localhost:3000/*", "https://*.staging.meshlogiq.io/*" ],
-      "webOrigins": [ "http://localhost:3000", "https://*.staging.meshlogiq.io" ]
+      "redirectUris": [ "http://localhost:3000/*", "https://*.staging.meshlogiq.io/*", "https://meshlogiq.local/*" ],
+      "webOrigins": [ "http://localhost:3000", "https://*.staging.meshlogiq.io", "https://meshlogiq.local" ]
     },
     {
       "clientId": "meshlogiq-backend",
@@ -46,6 +46,19 @@
       "serviceAccountsEnabled": true,
       "clientAuthenticatorType": "client-secret",
       "secret": "changeme-rotate-in-production"
+    },
+    {
+      "clientId": "meshlogiq-frontend",
+      "name": "MeshLogiQ Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "redirectUris": [ "http://localhost:3000/*", "https://meshlogiq.local/*" ],
+      "webOrigins": [ "http://localhost:3000", "https://meshlogiq.local" ]
     }
   ],
   "smtpServer": {
