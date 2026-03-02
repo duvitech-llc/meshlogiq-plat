@@ -21,10 +21,3 @@ http:
     gzip:
       compress: {}
 
-  routers:
-    # Optional: Traefik dashboard at https://traefik.meshlogiq.local/
-    traefik-dashboard:
-      rule: Host(`traefik.meshlogiq.local`)
-      entryPoints: [websecure]
-      service: api@internal
-      tls: {}

@@ -1,4 +1,6 @@
 
+infra/pgadmin_data
+infra/meshlogiq_db
 
 infra/env_files/*.env
 !infra/env_files/*.env.example
