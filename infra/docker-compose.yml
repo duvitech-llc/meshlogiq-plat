@@ -1,0 +1,20 @@
+services:
+  traefik:
+    image: traefik:latest
+    container_name: meshlogiq-traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./traefik/config/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/config/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./traefik/certs:/certs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - meshlogiq-net
+      
+networks:
+  meshlogiq-net:
+    driver: bridge
+

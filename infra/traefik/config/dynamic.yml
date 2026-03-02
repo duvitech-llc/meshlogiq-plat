@@ -1,0 +1,30 @@
+tls:
+  certificates:
+    - certFile: /certs/wildcard-fullchain.crt
+      keyFile: /certs/wildcard.key
+  options:
+    default:
+      minVersion: VersionTLS12
+      sniStrict: false
+
+http:
+  middlewares:
+    secure-headers:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        contentTypeNosniff: true
+        frameDeny: true
+        referrerPolicy: no-referrer
+        sslRedirect: true
+    gzip:
+      compress: {}
+
+  routers:
+    # Optional: Traefik dashboard at https://traefik.meshlogiq.local/
+    traefik-dashboard:
+      rule: Host(`traefik.meshlogiq.local`)
+      entryPoints: [websecure]
+      service: api@internal
+      tls: {}

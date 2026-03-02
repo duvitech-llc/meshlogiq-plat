@@ -1,0 +1,7 @@
+
+
+infra/env_files/*.env
+!infra/env_files/*.env.example
+
+infra/traefik/certs/*
+!infra/traefik/certs/.gitkeep

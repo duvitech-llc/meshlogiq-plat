@@ -1,0 +1,12 @@
+# traefik/dynamic_tls.yml
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/wildcard-fullchain.crt
+        keyFile: /certs/wildcard.key
+
+  # (Optional but harmless) also register it explicitly:
+  certificates:
+    - certFile: /certs/wildcard-fullchain.crt
+      keyFile: /certs/wildcard.key
