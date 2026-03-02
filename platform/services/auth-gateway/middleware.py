@@ -25,8 +25,11 @@ class KeycloakJWTAuthMiddleware(MiddlewareMixin):
     
     def process_request(self, request):
         """Process incoming request and validate JWT token."""
+        # Build admin prefix dynamically from settings (e.g. "admin/" → "/admin/")
+        admin_prefix = '/' + settings.DJANGO_ADMIN_URL.lstrip('/')
+
         # Skip for admin and health check endpoints
-        if request.path.startswith('/admin/') or request.path.startswith('/health'):
+        if request.path.startswith(admin_prefix) or request.path.startswith('/health'):
             return None
         
         # Skip for public endpoints

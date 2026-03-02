@@ -24,6 +24,16 @@ DEBUG = env.bool('DJANGO_DEBUG', default=True)
 # Allowed hosts
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
+# Trusted origins for CSRF (required when behind Traefik HTTPS proxy)
+CSRF_TRUSTED_ORIGINS = env.list(
+    'CSRF_TRUSTED_ORIGINS',
+    default=['https://auth-gateway.meshlogiq.local', 'https://meshlogiq.local']
+)
+
+# Traefik / reverse-proxy support
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # CORS settings
 CORS_ALLOWED_ORIGINS = env.list(
     'CORS_ALLOWED_ORIGINS',
@@ -59,6 +69,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # serve static files (admin CSS/JS)
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -121,9 +132,10 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# Static files (whitenoise serves admin CSS/JS via gunicorn)
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -147,8 +159,11 @@ KEYCLOAK_JWKS_URL = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-con
 FASTAPI_HOST = env('FASTAPI_HOST', default='0.0.0.0')
 FASTAPI_PORT = env.int('FASTAPI_PORT', default=8000)
 
-# Redis configuration
-REDIS_URL = env('REDIS_URL', default='redis://localhost:6379/0')
+# Redis configuration — accept a full URL or construct from individual parts
+_redis_host = env('REDIS_HOST', default='localhost')
+_redis_port = env.int('REDIS_PORT', default=6379)
+_redis_db = env.int('REDIS_DB', default=0)
+REDIS_URL = env('REDIS_URL', default=f'redis://{_redis_host}:{_redis_port}/{_redis_db}')
 
 # Rate limiting defaults
 RATE_LIMIT_DEFAULT = env.int('RATE_LIMIT_DEFAULT', default=100)  # requests per minute
