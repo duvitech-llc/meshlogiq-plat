@@ -26,9 +26,9 @@
     }
 }
 
-// Auth Page Side Image
+// Auth Page Side Image (fallback — components can pass their own background-image)
 .card-side-img {
-    background-image: url("../../images/auth.jpg");
+    background-image: url("../../images/bg-iot2.jpg");
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;

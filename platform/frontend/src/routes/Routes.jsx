@@ -2,6 +2,9 @@ import { Route, Routes, Navigate } from 'react-router-dom'
 import { PrivateRoute } from './PrivateRoute'
 import { Root } from './Root'
 import LandingPage from '../pages/LandingPage'
+import LoginPage from '../pages/LoginPage'
+import SignupPage from '../pages/SignupPage'
+import WelcomePage from '../pages/WelcomePage'
 import Dashboard from '../pages/Dashboard'
 import LogsPage from '../pages/Logs'
 import UsersPage from '../pages/Users'
@@ -17,6 +20,17 @@ export const AllRoutes = () => {
     <Routes>
       <Route path="/" element={<Root />}>
         <Route index element={<LandingPage />} />
+        {/* Auth routes — public, no PrivateRoute wrapper */}
+        <Route path="login" element={<LoginPage />} />
+        <Route path="signup" element={<SignupPage />} />
+        <Route
+          path="welcome"
+          element={
+            <PrivateRoute requireProfile={false}>
+              <WelcomePage />
+            </PrivateRoute>
+          }
+        />
         <Route
           path="dashboard"
           element={

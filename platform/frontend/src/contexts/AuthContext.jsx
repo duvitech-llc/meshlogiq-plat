@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import keycloakInstance from '../auth/keycloak'
 import { initKeycloak, isKeycloakConfigured } from '../auth/initKeycloak'
 import { useUserProfile } from '../hooks/useUserProfile'
 
@@ -36,13 +37,18 @@ export const AuthProvider = ({ children }) => {
     let refreshTimer
     initKeycloak()
       .then((auth) => {
-        const kc = isKeycloakConfigured() ? require('../auth/keycloak').default : createMockKeycloak()
+        // Use the real Keycloak instance if configured, otherwise fall back to
+        // the no-op mock.  Critically, we do NOT replace kc with the mock when
+        // the user simply has no existing session — they still need the real
+        // instance to be able to call login() / register().
+        const kc = isKeycloakConfigured() ? keycloakInstance : createMockKeycloak()
         setKeycloak(kc)
         setKcReady(true)
+
         if (auth && kc.authenticated) {
           console.log('🔐 Keycloak authenticated, token available')
           setToken(kc.token)
-          
+
           // Set up token refresh timer
           refreshTimer = setInterval(async () => {
             try {
@@ -56,13 +62,14 @@ export const AuthProvider = ({ children }) => {
             }
           }, 10000)
         } else {
-          console.log('🔓 No authentication found')
-          setKeycloak(createMockKeycloak())
+          // Not authenticated — real Keycloak is already set, nothing to do.
+          // login() / signup() will work correctly from this state.
+          console.log('🔓 No active session — ready for sign in / sign up')
         }
       })
       .catch((e) => {
         console.warn('Keycloak not configured, running in demo mode:', e)
-        setError(null) // Don't show error for missing Keycloak
+        setError(null)
         setKeycloak(createMockKeycloak())
         setKcReady(true)
       })
