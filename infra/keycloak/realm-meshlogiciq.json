@@ -1,0 +1,62 @@
+{
+  "realm": "meshlogiq",
+  "displayName": "MeshLogIQ",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "rememberMe": true,
+  "verifyEmail": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "editUsernameAllowed": false,
+  "resetPasswordAllowed": true,
+  "accessTokenLifespan": 900,
+  "ssoSessionIdleTimeout": 28800,
+  "ssoSessionMaxLifespan": 86400,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 1,
+  "loginTheme": "keycloakify-starter",
+  "passwordPolicy": "length(12) and upperCase(1) and digits(1) and specialChars(1) and notUsername",
+  "roles": {
+    "realm": [
+      { "name": "org:admin", "description": "Full administrative access to the organization", "composite": false, "clientRole": false },
+      { "name": "org:operator", "description": "Can send commands and manage devices", "composite": false, "clientRole": false },
+      { "name": "org:viewer", "description": "Read-only access to organization resources", "composite": false, "clientRole": false }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "meshlogiq-dashboard",
+      "name": "MeshLogiQ Dashboard",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "redirectUris": [ "http://localhost:3000/*", "https://*.staging.meshlogiq.io/*" ],
+      "webOrigins": [ "http://localhost:3000", "https://*.staging.meshlogiq.io" ]
+    },
+    {
+      "clientId": "meshlogiq-backend",
+      "name": "MeshLogiQ Backend Service",
+      "enabled": true,
+      "publicClient": false,
+      "serviceAccountsEnabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "changeme-rotate-in-production"
+    }
+  ],
+  "smtpServer": {
+    "host": "${KC_SMTP_HOST:-smtp.office365.com}",
+    "port": "${KC_SMTP_PORT:-587}",
+    "from": "${KC_SMTP_FROM:-support@meshlogiq.com}",
+    "fromDisplayName": "MeshLogIQ",
+    "auth": "${KC_SMTP_AUTH:-true}",
+    "user": "${KC_SMTP_USER:-}",
+    "password": "${KC_SMTP_PASSWORD:-}",
+    "starttls": "true",
+    "ssl": "false"
+  }
+}

@@ -21,13 +21,13 @@ services:
       - "traefik.http.routers.traefik-dashboard.tls=true"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
   db:
-    image: postgis/postgis:18-3.4
+    image: timescale/timescaledb-ha:pg18
     container_name: meshlogiq-db
     restart: unless-stopped
     env_file:
       - ./env_files/db.env
     volumes:
-      - meshlogiq_pgdata:/home/postgres/pgdata/data
+      - meshlogiq_pg_data:/home/postgres/pgdata/data
       - ./db/initdb:/docker-entrypoint-initdb.d
     networks:
       - meshlogiq-net
@@ -58,6 +58,27 @@ services:
       - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.meshlogiq.local`)"
       - "traefik.http.routers.pgadmin.entrypoints=websecure"
       - "traefik.http.routers.pgadmin.tls=true"
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: meshlogiq-keycloak
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ./env_files/keycloak.env
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+      - ./keycloak-themes/keycloak-theme-for-kc-all-other-versions.jar:/opt/keycloak/providers/meshlogiq-theme.jar:ro
+    command: ["start", "--proxy-headers", "xforwarded", "--import-realm", "--features=scripts"]
+    networks:
+      - meshlogiq-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=meshlogiq-env_meshlogiq_network" 
+      - "traefik.http.routers.keycloak.rule=Host(`sso.meshlogiq.local`)"
+      - "traefik.http.routers.keycloak.entrypoints=websecure"
+      - "traefik.http.routers.keycloak.tls=true"
+      - "traefik.http.services.keycloak.loadbalancer.server.port=8080"
   minio:
     image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
     container_name: meshlogiq-minio
@@ -94,7 +115,7 @@ services:
       - "traefik.http.routers.minio-s3-buckets.service=minio-s3"
 
 volumes:
-  meshlogiq_pgdata:
+  meshlogiq_pg_data:
   meshlogiq_pga_data:
 
 networks:
