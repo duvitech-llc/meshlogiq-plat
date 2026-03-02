@@ -3,7 +3,7 @@
   "displayName": "MeshLogIQ",
   "enabled": true,
   "sslRequired": "external",
-  "registrationAllowed": false,
+  "registrationAllowed": true,
   "rememberMe": true,
   "verifyEmail": true,
   "loginWithEmailAllowed": true,

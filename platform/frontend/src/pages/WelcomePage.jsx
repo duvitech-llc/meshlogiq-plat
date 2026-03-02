@@ -1,21 +1,12 @@
-import { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuthContext } from '../contexts/AuthContext'
 import { useLayoutContext } from '../contexts/useLayoutContext'
 import logoDark from '../assets/images/logo-dark.png'
 import logoLight from '../assets/images/logo-light.png'
 
 export default function WelcomePage() {
-  const { kcReady, isAuthenticated, keycloakUser, profileInitialized, profile } = useAuthContext()
+  const { kcReady, isAuthenticated, keycloakUser, profile, login, signup } = useAuthContext()
   const { theme } = useLayoutContext()
-  const navigate = useNavigate()
-
-  // Not authenticated after Keycloak is ready → send to login
-  useEffect(() => {
-    if (kcReady && !isAuthenticated) {
-      navigate('/login', { replace: true })
-    }
-  }, [kcReady, isAuthenticated, navigate])
 
   // Derive a friendly display name
   const displayName =
@@ -33,6 +24,39 @@ export default function WelcomePage() {
             <span className="visually-hidden">Loading…</span>
           </div>
           <p className="text-muted">Completing sign up…</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Public entry state: allow sign in or sign up directly from welcome page
+  if (!isAuthenticated) {
+    return (
+      <div className="min-vh-100 d-flex align-items-center justify-content-center bg-body">
+        <div className="text-center px-4" style={{ maxWidth: 540 }}>
+          <div className="mb-4">
+            <img
+              src={theme === 'dark' ? logoLight : logoDark}
+              alt="MeshLogIQ"
+              height="40"
+            />
+          </div>
+
+          <h3 className="fw-bold mb-2">Welcome to MeshLogIQ</h3>
+          <p className="text-muted mb-4">
+            Sign in to continue with your account or create a new account to get started.
+          </p>
+
+          <div className="d-grid gap-2 d-sm-flex justify-content-sm-center">
+            <button type="button" className="btn btn-primary btn-lg px-5" onClick={login}>
+              <i className="ri-login-box-line me-2" />
+              Sign In
+            </button>
+            <button type="button" className="btn btn-outline-secondary btn-lg px-4" onClick={signup}>
+              <i className="ri-user-add-line me-2" />
+              Sign Up
+            </button>
+          </div>
         </div>
       </div>
     )

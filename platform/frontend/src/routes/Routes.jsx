@@ -23,14 +23,7 @@ export const AllRoutes = () => {
         {/* Auth routes — public, no PrivateRoute wrapper */}
         <Route path="login" element={<LoginPage />} />
         <Route path="signup" element={<SignupPage />} />
-        <Route
-          path="welcome"
-          element={
-            <PrivateRoute requireProfile={false}>
-              <WelcomePage />
-            </PrivateRoute>
-          }
-        />
+        <Route path="welcome" element={<WelcomePage />} />
         <Route
           path="dashboard"
           element={

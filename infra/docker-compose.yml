@@ -74,7 +74,7 @@ services:
       - meshlogiq-net
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=meshlogiq-env_meshlogiq_network" 
+      - "traefik.docker.network=meshlogiq-plat_meshlogiq-net"
       - "traefik.http.routers.keycloak.rule=Host(`sso.meshlogiq.local`)"
       - "traefik.http.routers.keycloak.entrypoints=websecure"
       - "traefik.http.routers.keycloak.tls=true"
