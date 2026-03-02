@@ -141,6 +141,13 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=meshlogiq-net"
+      # HTTP to HTTPS redirect
+      - "traefik.http.routers.http-catchall.rule=Host(`meshlogiq.local`) || HostRegexp(`{subdomain:.+}.meshlogiq.local`)"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+      - "traefik.http.routers.http-catchall.priority=1"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectScheme.scheme=https"
+      # Main HTTPS router
       - "traefik.http.routers.frontend.rule=Host(`meshlogiq.local`)"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls=true"
