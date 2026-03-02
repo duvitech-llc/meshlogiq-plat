@@ -10,7 +10,22 @@ export class UserService {
    */
   async getProfile(token) {
     try {
-      const profile = await apiClient.get('/api/accounts/whoami/', token)
+      const user = await apiClient.getCurrentUser(token)
+
+      const displayName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username || user.email
+      const profile = {
+        profile: {
+          uuid: user.id,
+          email: user.email,
+          username: user.username,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          display_name: displayName,
+          global_role: 'viewer',
+        },
+        organizations: [],
+      }
+
       return {
         success: true,
         data: profile,

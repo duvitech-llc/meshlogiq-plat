@@ -161,6 +161,22 @@ KEYCLOAK_JWKS_URL = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-con
 # Keycloak token issuer — validated on every JWT (prevents cross-realm token acceptance)
 KEYCLOAK_ISSUER = f"{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}"
 
+# Optional public issuer (when tokens are minted with external host, e.g. Traefik URL)
+KEYCLOAK_PUBLIC_ISSUER = env('KEYCLOAK_PUBLIC_ISSUER', default='')
+
+# Accepted audiences for API token validation.
+# Supports backend service tokens and browser tokens from the frontend SPA.
+KEYCLOAK_ACCEPTED_AUDIENCES = env.list(
+    'KEYCLOAK_ACCEPTED_AUDIENCES',
+    default=[KEYCLOAK_CLIENT_ID],
+)
+
+# Accepted issuers for API token validation.
+# Defaults to internal issuer; includes public issuer when configured.
+KEYCLOAK_ACCEPTED_ISSUERS = [KEYCLOAK_ISSUER]
+if KEYCLOAK_PUBLIC_ISSUER:
+    KEYCLOAK_ACCEPTED_ISSUERS.append(KEYCLOAK_PUBLIC_ISSUER)
+
 # FastAPI settings
 FASTAPI_HOST = env('FASTAPI_HOST', default='0.0.0.0')
 FASTAPI_PORT = env.int('FASTAPI_PORT', default=8000)

@@ -8,6 +8,115 @@ from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
 import requests
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError, transaction
+
+
+def _audience_matches(payload, accepted_audiences):
+    """Return True when token aud/azp matches one of the accepted audiences."""
+    token_aud = payload.get('aud')
+    token_azp = payload.get('azp')
+
+    if isinstance(token_aud, str):
+        token_audiences = {token_aud}
+    elif isinstance(token_aud, (list, tuple, set)):
+        token_audiences = {str(aud) for aud in token_aud}
+    else:
+        token_audiences = set()
+
+    if token_azp:
+        token_audiences.add(str(token_azp))
+
+    return bool(token_audiences.intersection(set(accepted_audiences)))
+
+
+def _issuer_matches(token_issuer, accepted_issuers):
+    """Return True when token issuer matches any accepted issuer (trailing slash tolerant)."""
+    if not token_issuer:
+        return False
+
+    normalized_token_issuer = str(token_issuer).rstrip('/')
+    normalized_issuers = {str(issuer).rstrip('/') for issuer in accepted_issuers}
+    return normalized_token_issuer in normalized_issuers
+
+
+def _upsert_local_user(UserModel, *, keycloak_user_id, username, email, first_name='', last_name='', is_service_account=False):
+    """
+    Resolve/create a local user for a Keycloak subject without violating
+    username/email uniqueness constraints.
+    """
+    keycloak_user_id = str(keycloak_user_id) if keycloak_user_id else ''
+    username = (username or '').strip()
+    email = (email or '').strip()
+
+    if not username:
+      username = email.split('@')[0] if email and '@' in email else f'user-{keycloak_user_id[:8]}'
+    if not email:
+      email = f'{username}@meshlogiq.local'
+
+    # 1) Preferred match: existing Keycloak-linked user
+    existing = UserModel.objects.filter(keycloak_user_id=keycloak_user_id).first()
+    if existing:
+        updated = False
+        if existing.username != username and not is_service_account:
+            existing.username = username
+            updated = True
+        if existing.email != email:
+            existing.email = email
+            updated = True
+        if not is_service_account:
+            if first_name and existing.first_name != first_name:
+                existing.first_name = first_name
+                updated = True
+            if last_name and existing.last_name != last_name:
+                existing.last_name = last_name
+                updated = True
+        if existing.is_service_account != is_service_account:
+            existing.is_service_account = is_service_account
+            updated = True
+        if updated:
+            existing.save()
+        return existing
+
+    # 2) Reconcile legacy/local user by username or email and link Keycloak subject
+    candidate = UserModel.objects.filter(username=username).first() if username else None
+    if not candidate and email:
+        candidate = UserModel.objects.filter(email=email).first()
+
+    if candidate:
+        candidate.keycloak_user_id = keycloak_user_id
+        candidate.username = username
+        candidate.email = email
+        if not is_service_account:
+            candidate.first_name = first_name or candidate.first_name
+            candidate.last_name = last_name or candidate.last_name
+        candidate.is_service_account = is_service_account
+        candidate.save()
+        return candidate
+
+    # 3) Create new user; if race/constraint collision happens, retry reconcile path
+    defaults = {
+        'username': username,
+        'email': email,
+        'is_service_account': is_service_account,
+    }
+    if not is_service_account:
+        defaults['first_name'] = first_name
+        defaults['last_name'] = last_name
+
+    try:
+        with transaction.atomic():
+            return UserModel.objects.create(keycloak_user_id=keycloak_user_id, **defaults)
+    except IntegrityError:
+        fallback = UserModel.objects.filter(username=username).first() or UserModel.objects.filter(email=email).first()
+        if not fallback:
+            raise
+        fallback.keycloak_user_id = keycloak_user_id
+        fallback.is_service_account = is_service_account
+        if not is_service_account:
+            fallback.first_name = first_name or fallback.first_name
+            fallback.last_name = last_name or fallback.last_name
+        fallback.save()
+        return fallback
 
 
 class KeycloakJWTAuthMiddleware(MiddlewareMixin):
@@ -63,13 +172,25 @@ class KeycloakJWTAuthMiddleware(MiddlewareMixin):
                 token,
                 signing_key.key,
                 algorithms=['RS256'],
-                audience=settings.KEYCLOAK_CLIENT_ID,
-                issuer=settings.KEYCLOAK_ISSUER,
                 options={
                     "verify_exp": True,
-                    "require": ["exp", "iat", "iss", "aud", "sub"],
+                    "verify_iss": False,
+                    "verify_aud": False,
+                    "require": ["exp", "iat", "iss", "sub"],
                 },
             )
+
+            if not _issuer_matches(payload.get('iss'), settings.KEYCLOAK_ACCEPTED_ISSUERS):
+                return JsonResponse(
+                    {'error': 'Invalid token issuer'},
+                    status=401
+                )
+
+            if not _audience_matches(payload, settings.KEYCLOAK_ACCEPTED_AUDIENCES):
+                return JsonResponse(
+                    {'error': 'Invalid token audience'},
+                    status=401
+                )
             
             # Add token payload to request for use in views
             request.auth_payload = payload
@@ -81,29 +202,25 @@ class KeycloakJWTAuthMiddleware(MiddlewareMixin):
             request.email = payload.get('email', '')
             
             # Check if this is a service account (has client_id in payload)
-            is_service_account = payload.get('client_id') == settings.KEYCLOAK_CLIENT_ID
+            is_service_account = payload.get('client_id') in settings.KEYCLOAK_ACCEPTED_AUDIENCES
             
             if is_service_account:
-                # For service accounts, create/update local user
-                defaults = {
-                    'email': payload.get('email', 'service@meshlogiq.local'),
-                    'username': payload.get('client_id', 'service-account'),
-                    'is_service_account': True,
-                }
-                request.user, _ = self.User.objects.get_or_create(
+                request.user = _upsert_local_user(
+                    self.User,
                     keycloak_user_id=request.user_id,
-                    defaults=defaults
+                    username=payload.get('client_id', 'service-account'),
+                    email=payload.get('email', 'service@meshlogiq.local'),
+                    is_service_account=True,
                 )
             else:
-                # For regular users, get or create local user
-                request.user, _ = self.User.objects.get_or_create(
+                request.user = _upsert_local_user(
+                    self.User,
                     keycloak_user_id=request.user_id,
-                    defaults={
-                        'email': payload.get('email', ''),
-                        'username': payload.get('preferred_username', ''),
-                        'first_name': payload.get('given_name', ''),
-                        'last_name': payload.get('family_name', ''),
-                    }
+                    username=payload.get('preferred_username', ''),
+                    email=payload.get('email', ''),
+                    first_name=payload.get('given_name', ''),
+                    last_name=payload.get('family_name', ''),
+                    is_service_account=False,
                 )
             
             # Make user available for DRF permissions

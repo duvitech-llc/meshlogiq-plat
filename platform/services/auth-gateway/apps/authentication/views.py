@@ -13,6 +13,32 @@ from jwt import PyJWKClient
 from .models import MeshLogIQUser, UserProfile
 
 
+def _audience_matches(payload, accepted_audiences):
+    token_aud = payload.get('aud')
+    token_azp = payload.get('azp')
+
+    if isinstance(token_aud, str):
+        token_audiences = {token_aud}
+    elif isinstance(token_aud, (list, tuple, set)):
+        token_audiences = {str(aud) for aud in token_aud}
+    else:
+        token_audiences = set()
+
+    if token_azp:
+        token_audiences.add(str(token_azp))
+
+    return bool(token_audiences.intersection(set(accepted_audiences)))
+
+
+def _issuer_matches(token_issuer, accepted_issuers):
+    if not token_issuer:
+        return False
+
+    normalized_token_issuer = str(token_issuer).rstrip('/')
+    normalized_issuers = {str(issuer).rstrip('/') for issuer in accepted_issuers}
+    return normalized_token_issuer in normalized_issuers
+
+
 class JWKSView(views.APIView):
     """Keycloak JWKS endpoint for token verification."""
     permission_classes = [AllowAny]
@@ -247,13 +273,19 @@ class VerifyTokenView(views.APIView):
                 token,
                 signing_key.key,
                 algorithms=['RS256'],
-                audience=settings.KEYCLOAK_CLIENT_ID,
-                issuer=settings.KEYCLOAK_ISSUER,
                 options={
                     "verify_exp": True,
-                    "require": ["exp", "iat", "iss", "aud", "sub"],
+                    "verify_iss": False,
+                    "verify_aud": False,
+                    "require": ["exp", "iat", "iss", "sub"],
                 },
             )
+
+            if not _issuer_matches(payload.get('iss'), settings.KEYCLOAK_ACCEPTED_ISSUERS):
+                raise jwt.InvalidIssuerError('Invalid issuer')
+
+            if not _audience_matches(payload, settings.KEYCLOAK_ACCEPTED_AUDIENCES):
+                raise jwt.InvalidAudienceError('Invalid audience')
             
             return Response({
                 'valid': True,

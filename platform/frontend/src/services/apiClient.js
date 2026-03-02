@@ -2,8 +2,8 @@
  * API configuration and base client for MeshLogIQ backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE || 'https://api.meshlogiq.local'
 const AUTH_GATEWAY_URL = import.meta.env.VITE_AUTH_GATEWAY || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE || AUTH_GATEWAY_URL
 
 /**
  * Get the current access token from Keycloak
@@ -190,10 +190,10 @@ class ApiClient {
  */
 export class ApiError extends Error {
   constructor(status, data, response) {
-    const message = typeof data === 'object' && data.detail 
-      ? data.detail 
-      : typeof data === 'string' 
-        ? data 
+    const message = typeof data === 'object' && (data.detail || data.error)
+      ? (data.detail || data.error)
+      : typeof data === 'string'
+        ? data
         : 'An error occurred'
     
     super(message)
