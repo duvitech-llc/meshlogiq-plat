@@ -1,6 +1,4 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
--- Optional extensions (install separately if needed)
--- PostGIS: For geospatial data support
--- CREATE EXTENSION IF NOT EXISTS postgis;
+-- PostGIS is included in the postgis/postgis image
 -- TimescaleDB: For time-series data support
--- CREATE EXTENSION IF NOT EXISTS timescaledb;
+CREATE EXTENSION IF NOT EXISTS timescaledb;

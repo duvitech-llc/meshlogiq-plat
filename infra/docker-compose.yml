@@ -21,7 +21,7 @@ services:
       - "traefik.http.routers.traefik-dashboard.tls=true"
       - "traefik.http.routers.traefik-dashboard.service=api@internal"
   db:
-    image: postgres:18
+    image: postgis/postgis:18-3.4
     container_name: meshlogiq-db
     restart: unless-stopped
     env_file:
