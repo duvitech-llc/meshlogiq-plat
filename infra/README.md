@@ -64,7 +64,7 @@ use cert manager.
 ### Step 8: update host file
 
 ```
-127.0.0.1 api.meshlogiq.local dev.meshlogiq.local traefik.meshlogiq.local pgadmin.meshlogiq.local minio.meshlogiq.local s3.meshlogiq.local sso.meshlogiq.local
+127.0.0.1 api.meshlogiq.local dev.meshlogiq.local traefik.meshlogiq.local pgadmin.meshlogiq.local minio.meshlogiq.local s3.meshlogiq.local sso.meshlogiq.local meshlogiq.local
 ```
 
 ## Update docker container 

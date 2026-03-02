@@ -1,0 +1,7 @@
+# Frontend configuration for production
+
+# Vite environment variables (must start with VITE_)
+VITE_KEYCLOAK_URL=https://sso.meshlogiq.local
+VITE_KEYCLOAK_REALM=meshlogiq
+VITE_KEYCLOAK_CLIENT_ID=meshlogiq-frontend
+VITE_API_BASE=https://meshlogiq.local

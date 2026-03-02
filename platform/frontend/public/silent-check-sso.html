@@ -1,0 +1,9 @@
+<!doctype html>
+<html>
+  <body>
+    <script>
+      // Keycloak expects to find this page and use it for silent SSO checks
+      parent.postMessage(location.href, location.origin)
+    </script>
+  </body>
+</html>

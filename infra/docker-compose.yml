@@ -114,9 +114,42 @@ services:
       - "traefik.http.routers.minio-s3-buckets.tls=true"
       - "traefik.http.routers.minio-s3-buckets.service=minio-s3"
 
+  redis:
+    image: redis:latest
+    container_name: meshlogiq-redis
+    env_file:
+      - ./env_files/redis.env
+    # NOTE: no host port exposure for redis
+    networks:
+      - meshlogiq-net
+  nats:
+    image: nats:2
+    container_name: meshlogiq-nats
+    command: ["-js"]       # enable JetStream
+    networks:
+      - meshlogiq-net
+  frontend:
+    container_name: meshlogiq-frontend
+    working_dir: /app
+    build:
+      context: ../platform/frontend
+      dockerfile: Dockerfile
+    env_file:
+      - ./env_files/frontend.env
+    networks:
+      - meshlogiq-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=meshlogiq-net"
+      - "traefik.http.routers.frontend.rule=Host(`meshlogiq.local`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    
 volumes:
   meshlogiq_pg_data:
   meshlogiq_pga_data:
+  meshlogiq_node_modules:
 
 networks:
   meshlogiq-net:
