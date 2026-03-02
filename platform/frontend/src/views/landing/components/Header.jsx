@@ -13,6 +13,14 @@ export default function Header() {
     changeTheme
   } = useLayoutContext();
   const { login, signup } = useAuthContext();
+  const handleLoginClick = (e) => {
+    console.log('Login clicked');
+    if (typeof login === 'function') login(e);
+  };
+  const handleSignupClick = (e) => {
+    console.log('Signup clicked');
+    if (typeof signup === 'function') signup(e);
+  };
   const [activeSection, setActiveSection] = useState("Home");
   useEffect(() => {
     const handleScroll = () => {
@@ -72,11 +80,11 @@ export default function Header() {
                             <Button variant="link" className="btn-link btn-icon fw-semibold nav-link me-2" type="button" onClick={toggleTheme} id="theme-toggle">
                                 <TbContrast className="fs-22" />
                             </Button>
-                            <Button variant="outline-primary" size="sm" onClick={login}>
+                            <Button variant="outline-primary" size="sm" onClick={handleLoginClick}>
                                 Sign In
                             </Button>
-                            <Button variant="primary" size="sm" onClick={signup}>
-                                Sign Up
+                            <Button variant="primary" size="sm" onClick={handleSignupClick}>
+                              Sign Up
                             </Button>
                         </div>
                     </NavbarCollapse>
