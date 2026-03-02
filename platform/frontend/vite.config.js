@@ -18,6 +18,8 @@ export default defineConfig({
     },
   },
   server: {
+    // Allow the development server to be reached at this host (used in dev compose).
+    allowedHosts: ['meshlogiq.local'],
     host: true,
     port: 3000,
     strictPort: true,

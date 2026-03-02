@@ -45,6 +45,13 @@ export const AuthProvider = ({ children }) => {
         setKeycloak(kc)
         setKcReady(true)
 
+        // Log whether we're using a real Keycloak instance or the mock
+        if (isKeycloakConfigured()) {
+          console.log('AuthContext: using live Keycloak instance')
+        } else {
+          console.log('AuthContext: using mock Keycloak (no VITE_KEYCLOAK_* found)')
+        }
+
         if (auth && kc.authenticated) {
           console.log('🔐 Keycloak authenticated, token available')
           setToken(kc.token)

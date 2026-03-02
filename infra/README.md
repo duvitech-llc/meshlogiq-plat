@@ -90,3 +90,7 @@ docker compose run --rm backend sh /scripts/create_superuser.sh \
   --password S3cret!
 ```
 
+# Run development setup
+```
+docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up -d --force-recreate traefik keycloak
+```
